@@ -11,27 +11,14 @@ export default async function ChatPage() {
     .from('messages')
     .select('*')
     .order('created_at', { ascending: true })
-    .limit(100)
+    .limit(300)
 
   const username = user?.user_metadata?.username ?? user?.email?.split('@')[0] ?? 'Anon'
 
   return (
-    <>
-      {/* Header */}
-      <div
-        className="px-5 py-3 flex items-center border-b flex-shrink-0"
-        style={{ borderColor: 'rgba(255,255,255,0.07)' }}
-      >
-        <h2 className="text-sm font-semibold" style={{ color: '#b8cad8' }}># Allgemein</h2>
-        <span className="ml-2 text-xs" style={{ color: '#3a5060' }}>Gruppen-Chat</span>
-      </div>
-
-      <MessageList
-        initialMessages={(messages ?? []) as Message[]}
-        currentUserId={user?.id ?? ''}
-      />
-
+    <div className="flex flex-col h-full">
+      <MessageList initialMessages={(messages ?? []) as Message[]} currentUserId={user?.id ?? ''} />
       <MessageInput userId={user?.id ?? ''} username={username} />
-    </>
+    </div>
   )
 }

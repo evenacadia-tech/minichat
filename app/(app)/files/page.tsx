@@ -19,12 +19,9 @@ export default function FilesPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       setUserId(user.id)
-
-      // List files inside the user's sub-folder (upload path: ${userId}/${name})
       const { data } = await supabase.storage.from('files').list(user.id, {
         sortBy: { column: 'created_at', order: 'desc' },
       })
-
       const items: FileItem[] = (data ?? [])
         .filter(f => f.name !== '.emptyFolderPlaceholder')
         .map(f => ({
@@ -36,22 +33,35 @@ export default function FilesPage() {
     load()
   }, [])
 
-  function handleUploaded(url: string, name: string) {
-    setFiles(prev => [{ name, url }, ...prev])
-  }
-
   return (
     <FilesVault>
       <div className="flex flex-col h-full overflow-hidden">
         <div
-          className="px-5 py-3 flex items-center border-b flex-shrink-0"
-          style={{ borderColor: 'rgba(255,255,255,0.07)' }}
+          className="flex items-center flex-shrink-0"
+          style={{
+            padding: '14px 18px',
+            borderBottom: '1px solid var(--m-border)',
+            background: 'var(--m-panel)',
+          }}
         >
-          <h2 className="text-sm font-semibold" style={{ color: '#b8cad8' }}>Dateien-Tresor</h2>
-          <span className="ml-2 text-xs" style={{ color: '#3a5060' }}>Nur Bilder</span>
+          <span
+            style={{
+              fontSize: 11,
+              letterSpacing: '.12em',
+              textTransform: 'uppercase',
+              color: 'var(--m-blue)',
+              fontFamily: 'var(--m-font-heading)',
+              fontWeight: 700,
+            }}
+          >
+            Files
+          </span>
+          <span className="ml-2" style={{ fontSize: 11, color: 'var(--m-muted)', letterSpacing: '.06em' }}>
+            Nur Bilder
+          </span>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          <FileUpload userId={userId} onUploaded={handleUploaded} />
+        <div className="flex-1 overflow-y-auto" style={{ paddingTop: 'var(--m-grid-p)' }}>
+          <FileUpload userId={userId} onUploaded={(url, name) => setFiles(prev => [{ name, url }, ...prev])} />
           <FileGallery files={files} />
         </div>
       </div>

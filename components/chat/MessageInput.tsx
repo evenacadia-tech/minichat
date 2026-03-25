@@ -1,9 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Send } from 'lucide-react'
 
 const supabase = createClient()
 
@@ -15,19 +13,21 @@ interface MessageInputProps {
 export default function MessageInput({ userId, username }: MessageInputProps) {
   const [value, setValue] = useState('')
   const [sending, setSending] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 140) + 'px'
+    }
+  }, [value])
 
   async function handleSend() {
     const content = value.trim()
     if (!content) return
     setSending(true)
     setValue('')
-
-    await supabase.from('messages').insert({
-      user_id: userId,
-      username,
-      content,
-    })
-
+    await supabase.from('messages').insert({ user_id: userId, username, content })
     setSending(false)
   }
 
@@ -40,31 +40,75 @@ export default function MessageInput({ userId, username }: MessageInputProps) {
 
   return (
     <div
-      className="px-4 py-3 flex gap-2 items-end border-t"
-      style={{ borderColor: 'rgba(255,255,255,0.07)' }}
+      className="flex-shrink-0 flex items-end gap-3"
+      style={{
+        borderTop: '1px solid var(--m-border)',
+        padding: '16px 32px 16px 28px',
+        background: 'var(--m-panel)',
+      }}
     >
+      {/* Prompt character */}
+      <span
+        style={{
+          color: 'var(--m-red)',
+          fontSize: 18,
+          lineHeight: 1,
+          flexShrink: 0,
+          marginBottom: 13,
+          fontFamily: 'var(--m-font)',
+          fontWeight: 600,
+          opacity: .8,
+          textShadow: '0 0 8px rgba(255,184,0,.4)',
+        }}
+      >
+        ›
+      </span>
+
+      {/* Input */}
       <textarea
+        ref={textareaRef}
         value={value}
         onChange={e => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Nachricht schreiben… (Shift+Enter für Zeilenumbruch)"
+        placeholder="Message — Enter to send, Shift+Enter for newline"
         rows={1}
-        className="flex-1 resize-none outline-none py-2 px-3 rounded-[8px] min-h-[36px] max-h-[120px] text-sm"
+        disabled={sending}
         style={{
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.07)',
-          color: '#b8cad8',
+          flex: 1,
+          resize: 'none',
+          outline: 'none',
+          background: 'transparent',
+          border: 'none',
+          borderBottom: '1px solid var(--m-border2)',
+          color: 'var(--m-text)',
+          fontFamily: 'var(--m-font)',
+          fontSize: 15,
+          padding: '8px 0',
+          borderRadius: 0,
+          minHeight: 42,
+          maxHeight: 140,
+          lineHeight: 1.6,
+          transition: 'border-color .15s',
+          fontWeight: 300,
         }}
       />
-      <Button
+
+      {/* Send button */}
+      <button
         onClick={handleSend}
         disabled={sending || !value.trim()}
-        size="sm"
-        className="h-9 w-9 p-0 flex-shrink-0"
-        style={{ backgroundColor: '#3db8cc', color: '#141d2b' }}
+        className="btn-gradient flex items-center justify-center flex-shrink-0"
+        style={{
+          height: 42,
+          width: 42,
+          fontSize: 18,
+          fontWeight: 700,
+          cursor: sending || !value.trim() ? 'default' : 'pointer',
+          opacity: !value.trim() ? 0.35 : 1,
+        }}
       >
-        <Send size={14} />
-      </Button>
+        ↑
+      </button>
     </div>
   )
 }

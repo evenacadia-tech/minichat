@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
 type Mode = 'login' | 'register'
 
@@ -14,107 +12,240 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError('')
-    setLoading(true)
-
+    setError(''); setInfo(''); setLoading(true)
     try {
       if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        router.push('/chat')
-        router.refresh()
+        router.push('/chat'); router.refresh()
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { username } },
-        })
+        const { error } = await supabase.auth.signUp({ email, password, options: { data: { username } } })
         if (error) throw error
-        setError('Bestätigungs-E-Mail gesendet. Bitte E-Mail prüfen.')
+        setInfo('Account erstellt. Wenn E-Mail-Bestätigung aktiv ist: Postfach prüfen.')
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Fehler')
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#141d2b' }}>
+    <div
+      className="flex items-center justify-center h-screen"
+      style={{
+        background: `
+          radial-gradient(ellipse 50% 60% at 30% 50%, rgba(255,51,85,.06) 0%, transparent 70%),
+          radial-gradient(ellipse 50% 60% at 70% 50%, rgba(68,136,255,.06) 0%, transparent 70%),
+          var(--m-bg)`,
+        animation: 'fadeIn .5s ease',
+        position: 'relative',
+        zIndex: 1,
+      }}
+    >
       <div
-        className="w-[400px] p-8 rounded-[8px] flex flex-col gap-5"
+        className="auth-brackets"
         style={{
-          background: 'rgba(255,255,255,0.045)',
-          border: '1px solid rgba(255,255,255,0.07)',
+          width: 420,
+          background: 'var(--m-panel)',
+          border: '1px solid var(--m-border)',
+          padding: '40px 36px 32px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 22,
+          animation: 'fadeUp .45s cubic-bezier(.22,1,.36,1)',
         }}
       >
         {/* Logo */}
-        <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-widest uppercase mb-1" style={{ color: '#3db8cc' }}>
-            DIE MATRIX
-          </h1>
-          <p className="text-xs tracking-wider" style={{ color: '#5c7080' }}>
-            {mode === 'login' ? 'ZUGANG ANFORDERN' : 'KONTO ERSTELLEN'}
-          </p>
+        <div className="flex items-center gap-2.5">
+          <span
+            style={{
+              width: 10, height: 10,
+              background: 'var(--m-grad)',
+              boxShadow: 'var(--m-grad-glow)',
+              animation: 'pulse 2.5s ease-in-out infinite',
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{
+              fontFamily: 'var(--m-font-heading)',
+              fontSize: 28,
+              fontWeight: 800,
+              background: 'var(--m-grad)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '.06em',
+            }}
+          >
+            Die Matrix
+          </span>
         </div>
 
+        <div style={{ fontSize: 9, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--m-muted)', marginTop: -10 }}>
+          Nur für Mitglieder
+        </div>
+
+        {/* Auth Tabs */}
+        <div className="flex" style={{ borderBottom: '1px solid var(--m-border)', marginBottom: -4 }}>
+          <button
+            onClick={() => { setMode('login'); setError(''); setInfo('') }}
+            style={{
+              padding: '8px 20px',
+              cursor: 'pointer',
+              color: mode === 'login' ? 'var(--m-blue)' : 'var(--m-muted)',
+              borderBottom: `1px solid ${mode === 'login' ? 'var(--m-blue)' : 'transparent'}`,
+              marginBottom: -1,
+              fontSize: 11,
+              letterSpacing: '.12em',
+              textTransform: 'uppercase',
+              fontFamily: 'var(--m-font)',
+              background: 'transparent',
+              border: 'none',
+              borderBottomWidth: 1,
+              borderBottomStyle: 'solid',
+              borderBottomColor: mode === 'login' ? 'var(--m-blue)' : 'transparent',
+              transition: 'color .15s, border-color .15s',
+            }}
+          >
+            Login
+          </button>
+          <button
+            onClick={() => { setMode('register'); setError(''); setInfo('') }}
+            style={{
+              padding: '8px 20px',
+              cursor: 'pointer',
+              color: mode === 'register' ? 'var(--m-blue)' : 'var(--m-muted)',
+              marginBottom: -1,
+              fontSize: 11,
+              letterSpacing: '.12em',
+              textTransform: 'uppercase',
+              fontFamily: 'var(--m-font)',
+              background: 'transparent',
+              border: 'none',
+              borderBottomWidth: 1,
+              borderBottomStyle: 'solid',
+              borderBottomColor: mode === 'register' ? 'var(--m-blue)' : 'transparent',
+              transition: 'color .15s, border-color .15s',
+            }}
+          >
+            Register
+          </button>
+        </div>
+
+        {/* Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           {mode === 'register' && (
-            <Input
-              placeholder="Benutzername"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
+            <div className="flex flex-col gap-1.5">
+              <label style={{ fontSize: 11, color: 'var(--m-muted)', letterSpacing: '.1em', textTransform: 'uppercase' }}>
+                Display Name
+              </label>
+              <input
+                type="text"
+                placeholder="your name"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                required
+                style={{
+                  width: '100%', padding: '10px 14px',
+                  background: 'var(--m-surface)', border: '1px solid var(--m-border)',
+                  borderBottomColor: 'var(--m-border2)',
+                  color: 'var(--m-text)', fontFamily: 'var(--m-font)', fontSize: 14,
+                  outline: 'none', borderRadius: 0, letterSpacing: '.03em',
+                  transition: 'border-color .15s, box-shadow .15s',
+                }}
+              />
+            </div>
+          )}
+          <div className="flex flex-col gap-1.5">
+            <label style={{ fontSize: 11, color: 'var(--m-muted)', letterSpacing: '.1em', textTransform: 'uppercase' }}>
+              Email
+            </label>
+            <input
+              type="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
               required
-              className="bg-transparent"
-              style={{ borderColor: 'rgba(255,255,255,0.07)', color: '#b8cad8' }}
+              style={{
+                width: '100%', padding: '10px 14px',
+                background: 'var(--m-surface)', border: '1px solid var(--m-border)',
+                borderBottomColor: 'var(--m-border2)',
+                color: 'var(--m-text)', fontFamily: 'var(--m-font)', fontSize: 14,
+                outline: 'none', borderRadius: 0, letterSpacing: '.03em',
+                transition: 'border-color .15s, box-shadow .15s',
+              }}
             />
-          )}
-          <Input
-            type="email"
-            placeholder="E-Mail"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-            className="bg-transparent"
-            style={{ borderColor: 'rgba(255,255,255,0.07)', color: '#b8cad8' }}
-          />
-          <Input
-            type="password"
-            placeholder="Passwort"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            className="bg-transparent"
-            style={{ borderColor: 'rgba(255,255,255,0.07)', color: '#b8cad8' }}
-          />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label style={{ fontSize: 11, color: 'var(--m-muted)', letterSpacing: '.1em', textTransform: 'uppercase' }}>
+              Password
+            </label>
+            <input
+              type="password"
+              placeholder={mode === 'register' ? 'min. 6 chars' : '••••••••'}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              style={{
+                width: '100%', padding: '10px 14px',
+                background: 'var(--m-surface)', border: '1px solid var(--m-border)',
+                borderBottomColor: 'var(--m-border2)',
+                color: 'var(--m-text)', fontFamily: 'var(--m-font)', fontSize: 14,
+                outline: 'none', borderRadius: 0, letterSpacing: '.03em',
+                transition: 'border-color .15s, box-shadow .15s',
+              }}
+            />
+          </div>
 
+          {info && (
+            <p style={{ color: 'var(--m-muted-hi)', fontSize: 12, lineHeight: 1.75, letterSpacing: '.03em' }}>
+              {info}
+            </p>
+          )}
           {error && (
-            <p className="text-xs text-red-400 text-center">{error}</p>
+            <p style={{ color: 'var(--m-red)', fontSize: 12, letterSpacing: '.04em' }}>
+              {error}
+            </p>
           )}
 
-          <Button
+          <button
             type="submit"
             disabled={loading}
-            className="font-semibold tracking-wider"
-            style={{ backgroundColor: '#3db8cc', color: '#141d2b' }}
+            className="btn-gradient"
+            style={{
+              padding: '11px 20px',
+              fontSize: 12,
+              letterSpacing: '.12em',
+              textTransform: 'uppercase',
+              cursor: loading ? 'default' : 'pointer',
+              opacity: loading ? 0.35 : 1,
+            }}
           >
-            {loading ? '...' : mode === 'login' ? 'Einloggen' : 'Registrieren'}
-          </Button>
+            {mode === 'login' ? 'Login' : 'Register'}
+          </button>
         </form>
 
-        <button
-          onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError('') }}
-          className="text-xs text-center transition-colors"
-          style={{ color: '#5c7080' }}
+        <div
+          style={{
+            fontSize: 11,
+            color: 'var(--m-muted)',
+            lineHeight: 1.8,
+            borderTop: '1px solid var(--m-border)',
+            paddingTop: 14,
+            opacity: 0.65,
+            letterSpacing: '.02em',
+          }}
         >
-          {mode === 'login' ? 'Noch kein Konto? Registrieren' : 'Bereits registriert? Einloggen'}
-        </button>
+          Hinweis: E-Mail-Bestätigung muss im Supabase Dashboard unter
+          Auth &rarr; Settings deaktiviert sein.
+        </div>
       </div>
     </div>
   )

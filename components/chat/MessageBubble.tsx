@@ -1,6 +1,3 @@
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import { formatDate } from '@/lib/utils'
 import type { Message } from '@/lib/supabase/types'
 
 interface MessageBubbleProps {
@@ -9,34 +6,53 @@ interface MessageBubbleProps {
 }
 
 export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
+  const time = new Date(message.created_at).toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })
+
   return (
-    <div className={`flex gap-2.5 px-4 py-1 ${isOwn ? 'flex-row-reverse' : ''}`}>
-      {/* Avatar */}
+    <div className={`msg-terminal${isOwn ? ' own' : ''}`}>
+      {/* Meta: name + time */}
       <div
-        className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
-        style={{ background: 'rgba(61,184,204,0.18)', color: '#3db8cc' }}
+        className="flex flex-col items-end gap-0.5 flex-shrink-0"
+        style={{ width: 90 }}
       >
-        {message.username.charAt(0).toUpperCase()}
-      </div>
-
-      <div className={`flex flex-col gap-0.5 max-w-[75%] ${isOwn ? 'items-end' : ''}`}>
-        {/* Name + time */}
-        <div className={`flex items-baseline gap-1.5 text-xs ${isOwn ? 'flex-row-reverse' : ''}`} style={{ color: '#5c7080' }}>
-          <span className="font-medium">{message.username}</span>
-          <span style={{ color: '#3a5060' }}>{formatDate(message.created_at)}</span>
-        </div>
-
-        {/* Bubble */}
-        <div
-          className="px-3 py-2 rounded-[8px] text-sm leading-relaxed"
+        <span
           style={{
-            background: isOwn ? 'rgba(61,184,204,0.14)' : 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.07)',
-            color: '#b8cad8',
+            color: isOwn ? 'var(--m-red)' : 'var(--m-blue)',
+            fontWeight: 600,
+            fontSize: 11,
+            letterSpacing: '.1em',
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
           }}
         >
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-        </div>
+          {message.username}
+        </span>
+        <span
+          style={{
+            color: 'var(--m-muted)',
+            fontSize: 10,
+            letterSpacing: '.04em',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {time}
+        </span>
+      </div>
+
+      {/* Content */}
+      <div
+        className="flex-1"
+        style={{
+          fontSize: 15,
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          color: 'var(--m-text)',
+          lineHeight: 1.7,
+          fontWeight: 300,
+          paddingTop: 1,
+        }}
+      >
+        {message.content}
       </div>
     </div>
   )

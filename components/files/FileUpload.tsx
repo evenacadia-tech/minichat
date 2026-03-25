@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase/client'
 import { Upload, Loader2 } from 'lucide-react'
 
 const supabase = createClient()
-
 const ALLOWED = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic']
 
 interface FileUploadProps {
@@ -19,10 +18,7 @@ export default function FileUpload({ userId, onUploaded }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function uploadFile(file: File) {
-    if (!ALLOWED.includes(file.type)) {
-      alert('Nur Bilder erlaubt (JPEG, PNG, GIF, WebP, HEIC)')
-      return
-    }
+    if (!ALLOWED.includes(file.type)) { alert('Nur Bilder erlaubt'); return }
     setUploading(true)
     const path = `${userId}/${Date.now()}-${file.name}`
     const { error } = await supabase.storage.from('files').upload(path, file)
@@ -33,46 +29,34 @@ export default function FileUpload({ userId, onUploaded }: FileUploadProps) {
     setUploading(false)
   }
 
-  async function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setDragOver(false)
-    const file = e.dataTransfer.files[0]
-    if (file) await uploadFile(file)
-  }
-
-  async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) await uploadFile(file)
-    e.target.value = ''
-  }
-
   return (
     <div
-      onDrop={handleDrop}
+      onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) uploadFile(f) }}
       onDragOver={e => { e.preventDefault(); setDragOver(true) }}
       onDragLeave={() => setDragOver(false)}
       onClick={() => inputRef.current?.click()}
-      className="mx-4 mb-4 rounded-[8px] border-dashed border-[1.5px] flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors py-4"
+      className="border-dashed flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors"
       style={{
-        borderColor: dragOver ? '#3db8cc' : 'rgba(255,255,255,0.10)',
-        background: dragOver ? 'rgba(61,184,204,0.06)' : 'transparent',
+        margin: `0 var(--m-grid-p)`,
+        marginBottom: 'var(--m-grid-gap)',
+        padding: 'var(--m-upload-py) 0',
+        borderRadius: 'var(--m-radius)',
+        borderWidth: 'var(--m-border-w)',
+        borderStyle: 'dashed',
+        borderColor: dragOver ? 'var(--m-accent)' : 'var(--m-border2)',
+        background: dragOver ? 'var(--m-accent-dim)' : 'transparent',
       }}
     >
       {uploading ? (
-        <Loader2 size={18} className="animate-spin" style={{ color: '#3db8cc' }} />
+        <Loader2 className="animate-spin" style={{ color: 'var(--m-accent)', width: 'var(--m-icon-size)', height: 'var(--m-icon-size)' }} />
       ) : (
         <>
-          <Upload size={18} style={{ color: '#3a5060' }} />
-          <p className="text-xs" style={{ color: '#5c7080' }}>Bild hier ablegen oder klicken</p>
+          <Upload style={{ color: 'var(--m-text3)', width: 'var(--m-icon-size)', height: 'var(--m-icon-size)' }} />
+          <p className="text-xs" style={{ color: 'var(--m-text2)' }}>Bild hier ablegen oder klicken</p>
         </>
       )}
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleChange}
-      />
+      <input ref={inputRef} type="file" accept="image/*" className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = '' }} />
     </div>
   )
 }

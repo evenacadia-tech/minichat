@@ -2,9 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Trash2 } from 'lucide-react'
 import type { Note } from '@/lib/supabase/types'
-import { formatDate } from '@/lib/utils'
 
 const supabase = createClient()
 
@@ -26,8 +24,7 @@ export default function NoteList({ notes, selectedId, onSelect, onCreated, onDel
     const { data, error } = await supabase
       .from('notes')
       .insert({ user_id: userId, username, title: 'Neue Notiz', content: '' })
-      .select()
-      .single()
+      .select().single()
     setCreating(false)
     if (!error && data) onCreated(data as Note)
   }
@@ -40,49 +37,113 @@ export default function NoteList({ notes, selectedId, onSelect, onCreated, onDel
 
   return (
     <div
-      className="w-[220px] flex-shrink-0 flex flex-col border-r"
-      style={{ borderColor: 'rgba(255,255,255,0.07)' }}
+      className="flex-shrink-0 flex flex-col"
+      style={{
+        width: 'var(--m-notelist-w)',
+        borderRight: '1px solid var(--m-border)',
+        background: 'var(--m-panel)',
+      }}
     >
+      {/* Header */}
       <div
-        className="px-4 py-3 flex items-center justify-between border-b"
-        style={{ borderColor: 'rgba(255,255,255,0.07)' }}
+        className="flex items-center justify-between"
+        style={{
+          padding: '14px 18px',
+          borderBottom: '1px solid var(--m-border)',
+          fontSize: 11,
+          letterSpacing: '.12em',
+          textTransform: 'uppercase',
+          color: 'var(--m-blue)',
+          fontFamily: 'var(--m-font-heading)',
+          fontWeight: 700,
+        }}
       >
-        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#5c7080' }}>Notizen</span>
-        <button
-          onClick={handleCreate}
-          disabled={creating}
-          title="Neue Notiz"
-          style={{ color: '#3a5060' }}
-        >
-          <Plus size={14} />
-        </button>
+        <span>Notes</span>
+        <div className="flex gap-1">
+          <button
+            onClick={handleCreate}
+            disabled={creating}
+            style={{
+              padding: '5px 10px',
+              fontFamily: 'var(--m-font)',
+              fontSize: 11,
+              letterSpacing: '.05em',
+              background: 'transparent',
+              border: '1px solid var(--m-border)',
+              color: 'var(--m-muted)',
+              borderRadius: 0,
+              cursor: 'pointer',
+              transition: 'all .15s',
+            }}
+          >
+            + New
+          </button>
+        </div>
       </div>
+
+      {/* Note list */}
       <div className="flex-1 overflow-y-auto">
         {notes.length === 0 && (
-          <p className="text-center text-xs p-4" style={{ color: '#3a5060' }}>Keine Notizen</p>
-        )}
-        {notes.map(note => (
           <div
-            key={note.id}
-            onClick={() => onSelect(note)}
-            className="px-4 py-2.5 cursor-pointer flex items-start justify-between gap-2 group"
-            style={{ background: selectedId === note.id ? 'rgba(61,184,204,0.10)' : 'transparent' }}
+            className="flex-1 flex items-center justify-center flex-col gap-3.5 p-8"
+            style={{ color: 'var(--m-muted)', fontSize: 12, letterSpacing: '.12em', textTransform: 'uppercase' }}
           >
-            <div className="flex-1 min-w-0">
-              <p className="text-sm truncate" style={{ color: selectedId === note.id ? '#3db8cc' : '#b8cad8' }}>
-                {note.title || 'Unbenannt'}
-              </p>
-              <p className="text-xs" style={{ color: '#3a5060' }}>{formatDate(note.updated_at)}</p>
-            </div>
-            <button
-              onClick={e => handleDelete(e, note.id)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ color: '#3a5060' }}
-            >
-              <Trash2 size={12} />
-            </button>
+            <span style={{ fontSize: 36, opacity: .25, color: 'var(--m-blue)' }}>◈</span>
+            No notes yet
           </div>
-        ))}
+        )}
+        {notes.map(note => {
+          const active = selectedId === note.id
+          const date = new Date(note.updated_at).toLocaleDateString('de', { day: '2-digit', month: '2-digit' })
+          return (
+            <div
+              key={note.id}
+              onClick={() => onSelect(note)}
+              className="cursor-pointer group"
+              style={{
+                padding: '13px 18px',
+                borderBottom: '1px solid var(--m-border)',
+                borderLeft: `2px solid ${active ? 'var(--m-blue)' : 'transparent'}`,
+                background: active ? 'var(--m-surface)' : 'transparent',
+                transition: 'all .1s',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 14,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  marginBottom: 3,
+                  color: active ? 'var(--m-blue)' : 'var(--m-text)',
+                  fontWeight: 400,
+                }}
+              >
+                {note.title || 'Unbenannt'}
+              </div>
+              <div className="flex items-center justify-between">
+                <span style={{ fontSize: 11, color: 'var(--m-muted)', letterSpacing: '.06em' }}>
+                  {username} · {date}
+                </span>
+                <button
+                  onClick={e => handleDelete(e, note.id)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{
+                    padding: '2px 8px',
+                    fontFamily: 'var(--m-font)',
+                    fontSize: 12,
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#FF4466',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
